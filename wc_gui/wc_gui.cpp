@@ -12,6 +12,8 @@
 using namespace std;
 using namespace CMDToolkit;
 
+char **app;
+
 //命令(http)
 class CMD_wc: public CMD {
 public:
@@ -39,6 +41,7 @@ public:
                 return false;
             }
 
+                
             for(auto &it:_argvs){
                 long lcount,wcount,bcount,ncount,ecount;
                 Counter::Instance().count(it,lcount,wcount,bcount,ncount,ecount);
@@ -61,6 +64,13 @@ public:
                     total_bcount+=bcount;
                     (*stream)<<" "<<bcount<<"\t";
                 }
+                if(hasKey("complex")){
+                    total_ncount+=ncount;
+                    total_ecount+=ecount;
+                    (*stream)<<" "<<ncount<<"\t";
+                    (*stream)<<" "<<ecount<<"\t";
+                }
+                (*stream)<<" "<<it<<endl;
             }
             if(_argvs.size()>1){
                 if(hasKey("lines")){
@@ -123,6 +133,51 @@ public:
 
                                      return true;
                              });
+        (*_parser) << Option('x',/*该选项简称，如果是\x00则说明无简称*/
+                             "gui",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "查看命令版本",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                int tmp=1;
+                                QApplication a(tmp, app);
+                                WinGui w;
+                                char *argv[]={app[0],"-h"};
+
+                                w.show();
+                                a.exec();
+                                return true;
+
+                             });
+
+        (*_parser) << Option('s',/*该选项简称，如果是\x00则说明无简称*/
+                             "match",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "查看命令版本",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+
+                                    return true;
+
+                             });
+
+        (*_parser) << Option('a',/*该选项简称，如果是\x00则说明无简称*/
+                             "complex",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "查看命令版本",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                    return true;
+
+                             });
+
+
+
+
+
     }
 
     ~CMD_wc() {}
@@ -135,10 +190,6 @@ public:
 
 
 int main(int argc,char *argv[]){
-    for(int i=0;i<argc;++i){
-        cout<<argv[i]<<endl;
-    }
-
     app=&argv[0];
     REGIST_CMD(wc);
     signal(SIGINT,[](int ){

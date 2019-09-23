@@ -25,10 +25,15 @@ private:
         }
         bcount=info.st_size;
     }
+    void DirCursor(list<string> fileNames){
+
+    }
 private:
     bool nextline=true;
     bool isNote=true;
 };
 
+
+};
 
 #endif // WC_CMD_H
