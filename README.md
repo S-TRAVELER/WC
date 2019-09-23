@@ -1,6 +1,6 @@
 # WC
 
-![wc](https://note.youdao.com/yws/public/resource/7a96c956afc5000fec65397c4cb7c628/xmlnote/2026465DC569492CB981071E61E29FDA/10363)
+![wc](https://note.youdao.com/yws/public/resource/7a96c956afc5000fec65397c4cb7c628/xmlnote/523C120DC6304F6990D9EBFE6A93060E/10365)
 
 软工作业: 现wc命令
 基本功能列表：
