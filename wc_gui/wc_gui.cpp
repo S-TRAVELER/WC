@@ -1,0 +1,155 @@
+#include <iostream>
+#include "Cmd/CMD.h"
+#include "Util/util.h"
+#include <signal.h>
+#include "WinGui.h"
+#include <QApplication>
+#include "counter.h"
+#include <dirent.h>
+#include <regex>
+
+
+using namespace std;
+using namespace CMDToolkit;
+
+//命令(http)
+class CMD_wc: public CMD {
+public:
+    CMD_wc(){
+
+        _cb=[this](const std::shared_ptr<ostream> &stream, const string &arg){
+            cout<<"file: "<<arg<<endl;
+            return true;
+        };
+        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,mINI &args){
+            //所有选项解析完毕后触发该回调，我们可以在这里做一些全局的操作
+
+            long total_bcount=0,total_lcount=0,total_wcount=0,total_ncount=0,total_ecount=0;
+
+            if(!hasKey("bytes")&&!hasKey("lines")&&!hasKey("words")){
+                args.emplace("bytes","");
+                args.emplace("lines","");
+                args.emplace("words","");
+            }
+            if(hasKey("version")||hasKey("gui")){
+                return true;
+            }
+            if(_argvs.size()==0){
+                (*stream)<<"wc: 请指定统计的文件,输入\"-h\"获取帮助."<<endl;;
+                return false;
+            }
+
+            for(auto &it:_argvs){
+                long lcount,wcount,bcount,ncount,ecount;
+                Counter::Instance().count(it,lcount,wcount,bcount,ncount,ecount);
+                if(bcount==-1){
+                    (*stream)<<"无法打开文件："<<it<<endl;
+                    continue;
+                }
+
+
+                if(hasKey("lines")){
+                    total_lcount+=lcount;
+                    (*stream)<<" "<<lcount<<"\t";
+
+                }
+                if(hasKey("words")){
+                    total_wcount+=wcount;
+                    (*stream)<<" "<<wcount<<"\t";
+                }
+                if(hasKey("bytes")){
+                    total_bcount+=bcount;
+                    (*stream)<<" "<<bcount<<"\t";
+                }
+            }
+            if(_argvs.size()>1){
+                if(hasKey("lines")){
+                    (*stream)<<" "<<total_lcount<<"\t";
+                }
+                if(hasKey("words")){
+                    (*stream)<<" "<<total_wcount<<"\t";
+                }
+                if(hasKey("bytes")){
+                    (*stream)<<" "<<total_bcount<<"\t";
+                }
+                if(hasKey("complex")){
+                    (*stream)<<" "<<total_ncount<<"\t";
+                    (*stream)<<" "<<total_ecount<<"\t";
+                }
+                (*stream)<<" 总用量"<<endl;
+            }
+        }));
+
+        (*_parser) << Option('c',/*该选项简称，如果是\x00则说明无简称*/
+                             "bytes",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "显示Bytes数",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                    return true;
+                             });
+
+        (*_parser) << Option('l',/*该选项简称，如果是\x00则说明无简称*/
+                             "lines",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "显示行数",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                     return true;
+                             });
+
+        (*_parser) << Option('w',/*该选项简称，如果是\x00则说明无简称*/
+                             "words",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "显示字数",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                     return true;
+                             });
+
+        (*_parser) << Option('v',/*该选项简称，如果是\x00则说明无简称*/
+                             "version",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgNone,/*该选项后面必须跟值*/
+                             nullptr,/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "查看命令版本",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+                                    (*stream)<<" Command line \"wc\" 1.0.0"<<endl
+                                             <<" Based on Windows or Linux"<<endl
+                                             <<" Author: ZWJ. All rights reserved."<<endl;
+
+                                     return true;
+                             });
+    }
+
+    ~CMD_wc() {}
+
+    const char *description() const override {
+        return "WC统计";
+    }
+
+};
+
+
+int main(int argc,char *argv[]){
+    for(int i=0;i<argc;++i){
+        cout<<argv[i]<<endl;
+    }
+
+    app=&argv[0];
+    REGIST_CMD(wc);
+    signal(SIGINT,[](int ){
+        exit(0);
+    });
+    try{
+        CMD_DO("wc",argc,argv);
+    }catch (std::exception &ex){
+        cout << ex.what() << endl;
+        return 0;
+    }
+
+    return 0;
+}
