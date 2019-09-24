@@ -5,8 +5,8 @@
 #include "WinGui.h"
 #include <QApplication>
 #include "counter.h"
-#include <dirent.h>
-#include <regex>
+#include "poller.h"
+
 
 
 using namespace std;
@@ -23,10 +23,11 @@ public:
             cout<<"file: "<<arg<<endl;
             return true;
         };
-        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,mINI &args){
-            //所有选项解析完毕后触发该回调，我们可以在这里做一些全局的操作
 
-            long total_bcount=0,total_lcount=0,total_wcount=0,total_ncount=0,total_ecount=0;
+        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,map<string,variant> &args){
+            //所有选项解析完毕后触发该回调，我们可以在这里做一些全局的操作
+            total_bcount=0,total_lcount=0,total_wcount=0,total_ncount=0,total_ecount=0;
+            _isMulti=false;
 
             if(!hasKey("bytes")&&!hasKey("lines")&&!hasKey("words")){
                 args.emplace("bytes","");
@@ -41,38 +42,10 @@ public:
                 return false;
             }
 
-                
             for(auto &it:_argvs){
-                long lcount,wcount,bcount,ncount,ecount;
-                Counter::Instance().count(it,lcount,wcount,bcount,ncount,ecount);
-                if(bcount==-1){
-                    (*stream)<<"无法打开文件："<<it<<endl;
-                    continue;
-                }
-
-
-                if(hasKey("lines")){
-                    total_lcount+=lcount;
-                    (*stream)<<" "<<lcount<<"\t";
-
-                }
-                if(hasKey("words")){
-                    total_wcount+=wcount;
-                    (*stream)<<" "<<wcount<<"\t";
-                }
-                if(hasKey("bytes")){
-                    total_bcount+=bcount;
-                    (*stream)<<" "<<bcount<<"\t";
-                }
-                if(hasKey("complex")){
-                    total_ncount+=ncount;
-                    total_ecount+=ecount;
-                    (*stream)<<" "<<ncount<<"\t";
-                    (*stream)<<" "<<ecount<<"\t";
-                }
-                (*stream)<<" "<<it<<endl;
+                _poller->travel(it,stream,hasKey("match"));
             }
-            if(_argvs.size()>1){
+           if(_isMulti){
                 if(hasKey("lines")){
                     (*stream)<<" "<<total_lcount<<"\t";
                 }
@@ -86,8 +59,39 @@ public:
                     (*stream)<<" "<<total_ncount<<"\t";
                     (*stream)<<" "<<total_ecount<<"\t";
                 }
-                (*stream)<<" 总用量"<<endl;
+                (*stream)<<" Total"<<endl;
             }
+        }));
+        _poller.reset(new Poller([this](const std::shared_ptr<ostream> &stream,const string &arg){
+            long lcount,wcount,bcount,ncount,ecount;
+             Counter::Instance().count(arg,lcount,wcount,bcount,ncount,ecount);
+             if(bcount==-1){
+                 (*stream)<<"无法打开文件："<<arg<<endl;
+                 return;
+             }
+             if(!_isMulti&&bcount>0){
+                 _isMulti=true;
+             }
+            if(hasKey("lines")){
+                total_lcount+=lcount;
+                (*stream)<<" "<<lcount<<"\t";
+            }
+            if(hasKey("words")){
+                total_wcount+=wcount;
+                (*stream)<<" "<<wcount<<"\t";
+            }
+            if(hasKey("bytes")){
+                total_bcount+=bcount;
+                (*stream)<<" "<<bcount<<"\t";
+            }
+            if(hasKey("complex")){
+                total_ncount+=ncount;
+                total_ecount+=ecount;
+                (*stream)<<" "<<ncount<<"\t";
+                (*stream)<<" "<<ecount<<"\t";
+            }
+            (*stream)<<" "<<arg<<endl;
+
         }));
 
         (*_parser) << Option('c',/*该选项简称，如果是\x00则说明无简称*/
@@ -173,11 +177,6 @@ public:
                                     return true;
 
                              });
-
-
-
-
-
     }
 
     ~CMD_wc() {}
@@ -185,11 +184,16 @@ public:
     const char *description() const override {
         return "WC统计";
     }
+private:
+    shared_ptr<Poller> _poller;
+    long total_bcount,total_lcount,total_wcount,total_ncount,total_ecount;
+    bool _isMulti;
 
 };
 
 
 int main(int argc,char *argv[]){
+
     app=&argv[0];
     REGIST_CMD(wc);
     signal(SIGINT,[](int ){

@@ -10,7 +10,7 @@ using namespace CMDToolkit;
 class CMD_test: public CMD {
 public:
     CMD_test(){
-        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,mINI &args){
+        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,map<string,variant> &args){
             //所有选项解析完毕后触发该回调，我们可以在这里做一些全局的操作
             for(auto &it:args){
                 cout<<it.first<<" "<<it.second<<endl;

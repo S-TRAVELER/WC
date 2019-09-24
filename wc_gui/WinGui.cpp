@@ -1,17 +1,48 @@
-#include "WinGui.h"
-#include "ui_WinGui.h"
-#include <QFileDialog>
-#include "counter.h"
 #include <iostream>
 #include <QDateTime>
 #include <string>
 #include <regex>
+#include <sstream>
+#include "WinGui.h"
+#include "ui_WinGui.h"
+#include <QFileDialog>
+#include "counter.h"
+
 
 WinGui::WinGui(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::WinGui)
 {
     ui->setupUi(this);
+    QIcon icon("wc_icon.png");
+    setWindowIcon(icon);
+
+    _poller.reset(new Poller([this](const std::shared_ptr<ostream> &stream,const string &arg){
+        long lcount,wcount,bcount,ncount,ecount;
+         Counter::Instance().count(arg,lcount,wcount,bcount,ncount,ecount);
+         if(bcount==-1){
+             (*stream)<<"无法打开文件："<<arg<<endl;
+             return;
+         }
+         (*stream)<<"File: "<<arg<<endl;
+        if(ui->checkBox->isChecked()){
+            (*stream)<<"行数: "<<lcount<<endl;
+        }
+        if(ui->checkBox_2->isChecked()){
+
+            (*stream)<<"词数: "<<wcount<<endl;
+        }
+        if(ui->checkBox_3->isChecked()){
+
+            (*stream)<<"Bytes: "<<bcount<<endl;
+        }
+        if(ui->checkBox_4->isChecked()){
+            (*stream)<<"空行: "<<ncount<<endl;
+            (*stream)<<"注释行: "<<ecount<<endl;
+            (*stream)<<"代码行: "<<bcount<<endl;
+        }
+
+    }));
 }
 
 WinGui::~WinGui()
@@ -23,67 +54,15 @@ void WinGui::on_pushButton_2_clicked()
 {
 
     string filePath=ui->lineEdit->text().toStdString();
-    if(filePath.size()==0){
-        return;
-    }
-    size_t pos=filePath.rfind('/');
 
-    string path;
-    vector<QString> fileNames;
-    string file;
-    if(pos!=filePath.npos){
-        path=filePath.substr(0,pos);
-        file=filePath.substr(pos+1);
-    }else{
-        path=".";
-        file=filePath;
-    }
-    try {
-        QRegExp rx(file.c_str());
-        rx.setPatternSyntax(QRegExp::Wildcard);
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    QString current_date =current_date_time.toString("yyyy.MM.dd hh:mm:ss.zzz ddd");
+    ui->textBrowser->append(QString("Time: ")+current_date);
 
-        QDir d(path.c_str());
-        const QFileInfoList list = d.entryInfoList();
+    shared_ptr<stringstream> ss(new stringstream);
+    _poller->travel(filePath,ss,ui->checkBox_5->isChecked());
 
-        for(auto &it:list){
-            QString &&tmp=it.fileName();
-
-            if (rx.exactMatch(tmp)){
-                fileNames.push_back(tmp);
-            }
-        }
-
-        QDateTime current_date_time =QDateTime::currentDateTime();
-        QString current_date =current_date_time.toString("yyyy.MM.dd hh:mm:ss.zzz ddd");
-        ui->textBrowser->append(QString("Time: ")+current_date);
-
-        for(auto &it:fileNames){
-            long lcount,wcount,bcount,ncount,ecount;
-            string tmpFile=path+"/"+it.toStdString();
-
-            Counter::Instance().count(tmpFile,lcount,wcount,bcount,ncount,ecount);
-            if(bcount==-1){
-                ui->textBrowser->append(QString("打开文件失败: ")+QString::fromStdString(tmpFile)+"\n");
-            }
-            ui->textBrowser->append(QString("File: ")+QString::fromStdString(tmpFile));
-            if(ui->checkBox->isChecked()){
-                ui->textBrowser->append(QString("行数: ")+QString::number(lcount,10));
-            }
-            if(ui->checkBox_2->isChecked()){
-                ui->textBrowser->append(QString("词数: ")+QString::number(wcount,10));
-            }
-            if(ui->checkBox_3->isChecked()){
-                ui->textBrowser->append(QString("Bytes: ")+QString::number(bcount,10));
-            }
-            if(ui->checkBox_4->isChecked()){
-                ui->textBrowser->append(QString("空行: ")+QString::number(ecount,10));
-                ui->textBrowser->append(QString("注释行: ")+QString::number(ncount,10));
-                ui->textBrowser->append(QString("代码行: ")+QString::number(lcount-ncount-ecount,10));
-            }
-        }
-    } catch (exception &e) {
-        return;
-    }
+    ui->textBrowser->append(QString::fromStdString(ss->str()));
 
 }
 

@@ -2,6 +2,7 @@
 #define WINGUI_H
 
 #include <QMainWindow>
+#include "poller.h"
 
 namespace Ui {
 class WinGui;
@@ -23,6 +24,7 @@ private slots:
 
 private:
     Ui::WinGui *ui;
+    shared_ptr<Poller> _poller;
 };
 
 #endif // WINGUI_H

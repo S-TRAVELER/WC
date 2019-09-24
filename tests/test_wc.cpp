@@ -32,7 +32,7 @@ public:
             cout<<"file: "<<arg<<endl;
             return true;
         };
-        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,mINI &args){
+        _parser.reset(new OptionParser([this](const std::shared_ptr<ostream> &stream,map<string,variant> &args){
             //所有选项解析完毕后触发该回调，我们可以在这里做一些全局的操作
 //            (*stream)<<"wc command line"<<endl;
 

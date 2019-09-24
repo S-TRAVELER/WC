@@ -16,9 +16,7 @@
 
 using namespace std;
 
-namespace CMDToolkit{
-
-#define mINI map<string,variant>
+namespace CMDToolkit{ 
 
 class Option {
 public:
@@ -68,7 +66,7 @@ class CMD;
 
 class OptionParser {
 public:
-    typedef function< void(const std::shared_ptr<ostream> &,mINI &)> OptionCompleted;
+    typedef function< void(const std::shared_ptr<ostream> &,map<string,variant> &)> OptionCompleted;
     OptionParser(const OptionCompleted &cb = nullptr,bool enableEmptyArgs = true) {
         _onCompleted = cb;
         _enableEmptyArgs = enableEmptyArgs;
@@ -165,7 +163,7 @@ private:
     bool _enableEmptyArgs;
 };
 
-class CMD :public mINI{
+class CMD :public map<string,variant>{
 public:
     typedef function< bool (const std::shared_ptr<ostream> &stream, const string &arg)> Task;
     CMD(){};
@@ -330,7 +328,7 @@ public:
 class CMD_exit: public CMD {
 public:
     CMD_exit(){
-        _parser = std::make_shared<OptionParser>([](const std::shared_ptr<ostream> &,mINI &){
+        _parser = std::make_shared<OptionParser>([](const std::shared_ptr<ostream> &,map<string,variant> &){
             throw ExitException();
         });
     }
@@ -349,7 +347,7 @@ class CMD_clear : public CMD
 {
 public:
     CMD_clear(){
-        _parser = std::make_shared<OptionParser>([this](const std::shared_ptr<ostream> &stream,mINI &args){
+        _parser = std::make_shared<OptionParser>([this](const std::shared_ptr<ostream> &stream,map<string,variant> &args){
             clear(stream);
         });
     }
