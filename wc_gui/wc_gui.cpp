@@ -159,7 +159,7 @@ public:
                              Option::ArgNone,/*该选项后面必须跟值*/
                              nullptr,/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "查看命令版本",/*该选项说明文字*/
+                             "递归目录",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
 
                                     return true;
@@ -171,7 +171,7 @@ public:
                              Option::ArgNone,/*该选项后面必须跟值*/
                              nullptr,/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "查看命令版本",/*该选项说明文字*/
+                             "复杂统计",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
                                     return true;
 
@@ -182,7 +182,7 @@ public:
                              Option::ArgRequired,/*该选项后面必须跟值*/
                              "C++",/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "查看命令版本",/*该选项说明文字*/
+                             "统计语言",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
 
                                     RulesParser::RuleList_ptr tmp=RulesParser::Instance().getRule(arg);

@@ -20,6 +20,7 @@ WinGui::WinGui(QWidget *parent) :
     RulesParser::Instance().Foreach([&](const map<string, RulesParser::RuleList_ptr>::const_iterator& it){
           ui->comboBox->addItem(QString::fromStdString(it->first));
     });
+
     _poller.reset(new Poller([this](const std::shared_ptr<ostream> &stream,const string &arg){
         long lcount,wcount,bcount,ncount,ecount;
          Counter::Instance().count(arg,lcount,wcount,bcount,ncount,ecount);
