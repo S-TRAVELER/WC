@@ -1,6 +1,10 @@
 #include "poller.h"
-#include <dirent.h>
 #include <iostream>
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <dirent.h>
+#endif
 
 void Poller::travel(const string &str,const std::shared_ptr<ostream> &stream,bool recursive){
     size_t&& pos=str.rfind("/");
@@ -18,14 +22,40 @@ void Poller::travel(const string &str,const std::shared_ptr<ostream> &stream,boo
 }
 void Poller::recurTravel(const string &path, const regex &regexName,const std::shared_ptr<ostream> &stream,bool recursive){
     vector<pair<string,int>> dirvec;
-
-    DIR* dir = opendir(path.c_str());//打开指定目录
-    dirent* p = NULL;//定义遍历指针
-    while((p = readdir(dir)) != NULL)//开始逐个遍历
+#if defined(_WIN32)
     {
-        dirvec.push_back({p->d_name,static_cast<int>(p->d_type)});
+        long hFile = 0;
+        struct _finddata_t fileInfo;
+        string pathName, exdName;
+
+
+        if ((hFile = _findfirst(pathName.assign(path).
+            append("\\*").c_str(), &fileInfo)) == -1) {
+            cout<<"无法打开： "<<path<<endl;
+            return;
+        }
+        do {
+            if (fileInfo.attrib&_A_SUBDIR) {
+                dirvec.push_back({fileInfo.name ,4});
+
+            } else {
+                dirvec.push_back({fileInfo.name ,8});
+            }
+        } while (_findnext(hFile, &fileInfo) == 0);
+        _findclose(hFile);
     }
-    closedir(dir);//关闭指定目录
+#else
+    {
+        DIR* dir = opendir(path.c_str());//打开指定目录
+        dirent* p = NULL;//定义遍历指针
+        while((p = readdir(dir)) != NULL)//开始逐个遍历
+        {
+            dirvec.push_back({p->d_name,static_cast<int>(p->d_type)});
+        }
+        closedir(dir);//关闭指定目录
+    }
+#endif
+
 
     for(auto &it:dirvec)
     {
