@@ -41,7 +41,6 @@ public:
                 (*stream)<<"wc: 请指定统计的文件,输入\"-h\"获取帮助."<<endl;;
                 return false;
             }
-
             for(auto &it:_argvs){
                 _poller->travel(it,stream,hasKey("match"));
             }
@@ -69,7 +68,7 @@ public:
                  (*stream)<<"无法打开文件："<<arg<<endl;
                  return;
              }
-             if(!_isMulti&&bcount>0){
+             if(!_isMulti&&total_bcount>0){
                  _isMulti=true;
              }
             if(hasKey("lines")){
@@ -176,6 +175,25 @@ public:
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
                                     return true;
 
+                             });
+
+        (*_parser) << Option('L',/*该选项简称，如果是\x00则说明无简称*/
+                             "Language",/*该选项全称,每个选项必须有全称；不得为null或空字符串*/
+                             Option::ArgRequired,/*该选项后面必须跟值*/
+                             "C++",/*该选项默认值*/
+                             false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
+                             "查看命令版本",/*该选项说明文字*/
+                             [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
+
+                                    RulesParser::RuleList_ptr tmp=RulesParser::Instance().getRule(arg);
+                                    if(tmp==nullptr){
+                                        (*stream)<<"不支持："<<arg<<" ,"<<"设为默认语言 C++"<<endl;
+                                        (*stream)<<"支持语言：";
+                                        RulesParser::Instance().print(stream);
+                                    }else{
+                                        Counter::Instance().setRule(tmp);
+                                    }
+                                    return true;
                              });
     }
 
