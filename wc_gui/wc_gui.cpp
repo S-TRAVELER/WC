@@ -189,7 +189,10 @@ public:
                                     if(tmp==nullptr){
                                         (*stream)<<"不支持："<<arg<<" ,"<<"设为默认语言 C++"<<endl;
                                         (*stream)<<"支持语言：";
-                                        RulesParser::Instance().print(stream);
+                                        RulesParser::Instance().Foreach([&stream](const map<string, RulesParser::RuleList_ptr>::const_iterator& it){
+                                             (*stream)<<it->first<<" ";
+                                        });
+                                        (*stream)<<endl;
                                     }else{
                                         Counter::Instance().setRule(tmp);
                                     }

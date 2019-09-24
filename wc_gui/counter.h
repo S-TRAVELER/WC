@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string.h>
+#include <functional>
 #include <sys/stat.h>
 #include "Util/util.h"
 
@@ -17,9 +18,12 @@
 using namespace std;
 using namespace CMDToolkit;
 
+
 class RulesParser:public noncopyable{
 public:
+
     typedef shared_ptr<RuleList> RuleList_ptr;
+    typedef function<void(const map<string, RuleList_ptr>::const_iterator&) > Task;
 
     static RulesParser& Instance();
 
@@ -29,11 +33,12 @@ public:
         }
         return _rulesMap[name];
     }
-    void print(const std::shared_ptr<ostream> &stream){
-        for(auto &it:_rulesMap){
-            (*stream)<<it.first<<" ";
+    void Foreach (const  Task& func){
+        map<string, RuleList_ptr>::const_iterator iter=_rulesMap.begin();
+        while(iter!=_rulesMap.end()){
+            func(iter);
+            iter++;
         }
-         (*stream)<<endl;
     }
 private:
     RulesParser();
