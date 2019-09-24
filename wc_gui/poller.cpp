@@ -1,5 +1,4 @@
 #include "poller.h"
-#include <iostream>
 #if defined(_WIN32)
 #include <io.h>
 #else
@@ -31,7 +30,7 @@ void Poller::recurTravel(const string &path, const regex &regexName,const std::s
 
         if ((hFile = _findfirst(pathName.assign(path).
             append("\\*").c_str(), &fileInfo)) == -1) {
-            cout<<"无法打开： "<<path<<endl;
+            (*stream)<<"无法打开： "<<path<<endl;
             return;
         }
         do {
@@ -48,6 +47,9 @@ void Poller::recurTravel(const string &path, const regex &regexName,const std::s
     {
         DIR* dir = opendir(path.c_str());//打开指定目录
         dirent* p = NULL;//定义遍历指针
+	if(dir==NULL){
+		(*stream)<<"无法打开： "<<path<<endl;
+	}
         while((p = readdir(dir)) != NULL)//开始逐个遍历
         {
             dirvec.push_back({p->d_name,static_cast<int>(p->d_type)});
