@@ -6,8 +6,6 @@
 #endif
 #include <iostream>
 
-#include <direct.h>
-
 
 void Poller::travel(const string &str,const std::shared_ptr<ostream> &stream,bool recursive,bool match){
     if(recursive||match){
