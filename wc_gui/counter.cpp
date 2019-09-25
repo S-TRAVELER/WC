@@ -4,6 +4,13 @@
 #include "counter.h"
 #include "Util/util.h"
 
+#if defined(__WIN32)
+#define CHINESEMEM "1,2"
+#else
+#define CHINESEMEM "3"
+#endif
+
+
 #define LINE_MAX_LENGTH 100
 
 INSTANCE_IMP(RulesParser)
@@ -100,7 +107,7 @@ void Counter::count (const string &file,long &lcount,long &wcount, long &bcount,
        smatch result;
        regex spaceMatch("\\s*");
 //       regex wordMatch("\\w+|^[\u4e00-\u9fa5]");
-        regex wordMatch("\\w+|[\u4e00-\u9fa5]{1,2}");
+        regex wordMatch(string("\\w+|[\u4e00-\u9fa5]{")+CHINESEMEM+"}");
        string::const_iterator iterStart,iterEnd;
 
        while(!inFile.eof()){
@@ -118,6 +125,8 @@ void Counter::count (const string &file,long &lcount,long &wcount, long &bcount,
                    isnoteLine=true;
                }else if(isNote&&lineStr.npos!=lineStr.find(_lanVec->front().back())){
                    isNote=false;
+               }else if(!isNote&&lineStr.npos!=lineStr.find(_lanVec->back().front())){
+                   isnoteLine=true;
                }
                while(regex_search(iterStart,iterEnd,result,wordMatch)){
                    iterStart=result[0].second;
@@ -176,6 +185,7 @@ RulesParser::RulesParser(){
      }
      rfile.close();
 }
+
 
 
 
