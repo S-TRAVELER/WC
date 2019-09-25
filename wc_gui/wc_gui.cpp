@@ -41,6 +41,7 @@ public:
                 (*stream)<<"wc: 请指定统计的文件,输入\"-h\"获取帮助."<<endl;;
                 return false;
             }
+
             for(auto &it:_argvs){
                 _poller->travel(it,stream,hasKey("match"));
             }
@@ -63,9 +64,11 @@ public:
         }));
         _poller.reset(new Poller([this](const std::shared_ptr<ostream> &stream,const string &arg){
             long lcount,wcount,bcount,ncount,ecount;
+
              Counter::Instance().count(arg,lcount,wcount,bcount,ncount,ecount);
-             if(bcount==-1){
+             if(bcount<0){
                  (*stream)<<"无法打开文件："<<arg<<endl;
+
                  return;
              }
              if(!_isMulti&&total_bcount>0){
@@ -159,7 +162,7 @@ public:
                              Option::ArgNone,/*该选项后面必须跟值*/
                              nullptr,/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "递归目录",/*该选项说明文字*/
+                             "查看命令版本",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
 
                                     return true;
@@ -171,7 +174,7 @@ public:
                              Option::ArgNone,/*该选项后面必须跟值*/
                              nullptr,/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "复杂统计",/*该选项说明文字*/
+                             "查看命令版本",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
                                     return true;
 
@@ -182,7 +185,7 @@ public:
                              Option::ArgRequired,/*该选项后面必须跟值*/
                              "C++",/*该选项默认值*/
                              false,/*该选项是否必须赋值，如果没有默认值且为ArgRequired时用户必须提供该参数否则将抛异常*/
-                             "统计语言",/*该选项说明文字*/
+                             "查看命令版本",/*该选项说明文字*/
                              [this](const std::shared_ptr<ostream> &stream, const string &arg){/*解析到该选项的回调*/
 
                                     RulesParser::RuleList_ptr tmp=RulesParser::Instance().getRule(arg);
@@ -214,7 +217,6 @@ private:
 
 
 int main(int argc,char *argv[]){
-
     app=&argv[0];
     REGIST_CMD(wc);
     signal(SIGINT,[](int ){

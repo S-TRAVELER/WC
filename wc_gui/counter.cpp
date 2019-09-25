@@ -1,18 +1,23 @@
 #include <fstream>
+#include <fstream>
+#include <regex>
 #include "counter.h"
 #include "Util/util.h"
+
+#define LINE_MAX_LENGTH 100
 
 INSTANCE_IMP(RulesParser)
 INSTANCE_IMP(Counter)
 
 void Counter::count (const string &file,long &lcount,long &wcount, long &bcount,long &noteLines, long &emptyLines)
 {
-  char ch[3];
+  /*char ch[3];
   ch[0]='\n';
   ch[2]='\0';
   bool tag=false;
   FILE *fp = NULL;
   fp = fopen(file.c_str(), "r");
+
   if(fp==NULL){
       bcount=-1;
       wcount=-1;
@@ -69,7 +74,71 @@ void Counter::count (const string &file,long &lcount,long &wcount, long &bcount,
           lcount++;
       }
       ch[0]=ch[1];
-    }
+    }*/
+
+   isNote=false;
+   isnoteLine=false;
+
+   fstream inFile(file, ios::in);
+
+
+   bcount=-1;
+   wcount=-1;
+   lcount=-1;
+
+
+   if(inFile.is_open()){
+
+       wcount=0;
+       lcount=0;
+       noteLines=0;
+       emptyLines=0;
+
+       char strbuf[LINE_MAX_LENGTH+1];
+       string lineStr;
+
+       smatch result;
+       regex spaceMatch("\\s*");
+//       regex wordMatch("\\w+|^[\u4e00-\u9fa5]");
+        regex wordMatch("\\w+|[\u4e00-\u9fa5]{1,2}");
+       string::const_iterator iterStart,iterEnd;
+
+       while(!inFile.eof()){
+           inFile.getline(strbuf,LINE_MAX_LENGTH);
+           ++lcount;
+           lineStr.assign(strbuf);
+
+           iterStart=lineStr.begin();
+           iterEnd=lineStr.end();
+           if(regex_match(lineStr,spaceMatch)){
+               ++emptyLines;
+           }else{
+               if(!isNote&&lineStr.npos!=lineStr.find(_lanVec->front().front())){
+                   isNote=true;
+                   isnoteLine=true;
+               }else if(isNote&&lineStr.npos!=lineStr.find(_lanVec->front().back())){
+                   isNote=false;
+               }
+               while(regex_search(iterStart,iterEnd,result,wordMatch)){
+                   iterStart=result[0].second;
+                   ++wcount;
+               }
+
+
+           }
+           if(isnoteLine){
+               ++noteLines;
+               if(!isNote){
+                   isnoteLine=false;
+               }
+           }
+       }
+
+
+       inFile.close();
+       countBytes(file,bcount);
+   }
+
 }
 
 RulesParser::RulesParser(){

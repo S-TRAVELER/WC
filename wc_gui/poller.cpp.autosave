@@ -36,6 +36,7 @@ void Poller::travel(const string &str,const std::shared_ptr<ostream> &stream,boo
 }
 void Poller::recurTravel(const string &path, const regex &regexName,const std::shared_ptr<ostream> &stream,bool recursive){
     vector<pair<string,int>> dirvec;
+    
 #if defined(__WIN32)
     {
         long hFile = 0;

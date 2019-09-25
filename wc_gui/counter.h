@@ -72,9 +72,9 @@ private:
         _lanVec->push_back({"//"});
     }
 private:
-    bool nextline=true;
-    bool isNote=true;
-    bool noteLine=true;
+    bool nextline;
+    bool isNote;
+    bool isnoteLine;
     RulesParser::RuleList_ptr _lanVec;
 };
 

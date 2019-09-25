@@ -14,7 +14,7 @@ class Poller:public noncopyable
 public:
     typedef function<void(const std::shared_ptr<ostream> &stream,const string &arg)> Task;
     Poller(const Task& cb):_cb(cb){}
-    void travel(const string &str,const std::shared_ptr<ostream> &stream,bool recursive=false);
+    void travel(const string &str,const std::shared_ptr<ostream> &stream,bool recursive=false,bool match=false);
 
 private:
     void recurTravel(const string &path, const regex &regexName,const std::shared_ptr<ostream> &stream,bool recursive=false);
